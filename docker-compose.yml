@@ -1,0 +1,43 @@
+version: '3'
+
+networks:
+  net_backend: ~
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - './app:/app'
+    networks:
+      - net_backend
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - './app:/app'
+      - './docker/nginx/conf.d:/etc/nginx/conf.d'
+    networks:
+      - net_backend
+    depends_on:
+      - php
+      - mysql
+
+  mysql:
+    image: mysql
+    restart: always
+    volumes:
+      - './docker/volume/mysql/db:/var/lib/mysql'
+    environment:
+      MYSQL_DATABASE: speed_line_hub
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    networks:
+      - net_backend
